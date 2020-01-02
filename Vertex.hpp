@@ -3,24 +3,32 @@
 
 #include<iostream>
 #include<vector>
+#include"calc.hpp"
 using namespace std;
 
 class Vertex {
-public:
-	int x, y, z;
+private:
+	Vector3D m_coordinate;
 	int index;
 	vector<int> m_neighbors;
 	bool m_isDeleted;  // if this vertex is deleted, set this to true
-
+public:
 	// constructor
-	Vertex() { x = 0; y = 0; z = 0; index = -1; m_isDeleted = false; }
-	Vertex(int p_x, int p_y, int p_z, int p_index = -1) {
-		this->x = p_x; this->y = p_y; this->z = p_z; this->index = p_index; m_isDeleted = false;
+	Vertex() { m_coordinate.x = 0; m_coordinate.y = 0; m_coordinate.z = 0; index = -1; m_isDeleted = false; }
+	Vertex(float p_x, float p_y, float p_z, int p_index = -1) {
+		this->m_coordinate.x = p_x; 
+		this->m_coordinate.y = p_y; 
+		this->m_coordinate.z = p_z; 
+		this->index = p_index; m_isDeleted = false;
+	}
+	Vertex(Vector3D p_coor, int p_index) {
+		this->m_coordinate = p_coor;
+		this->index = p_index;
 	}
 
 	// two vertexes are the same if their coordinates are of the same
 	bool operator==(Vertex p) {
-		if (p.x == x && p.y == y && p.z == z) {
+		if (p.m_coordinate.x == m_coordinate.x && p.m_coordinate.y == m_coordinate.y && p.m_coordinate.z == m_coordinate.z) {
 			return true;
 		}
 		else {
@@ -61,16 +69,25 @@ public:
 		m_neighbors.clear();
 	}
 
+	// visit private elements
+	float getX() { return this->m_coordinate.x; }
+	float getY() { return this->m_coordinate.y; }
+	float getZ() { return this->m_coordinate.z; }
+	Vector3D getCoordinate() { return this->m_coordinate; }
+	int getIndex() { return this->index; }
+
+	// set private elements
+	void setIndex(int index) { this->index = index; }
 };
 
 class VertexSet {
 private:
 	vector<Vertex> m_vertexes;
 	int m_nextVertexIndex;
-	bool findVertexByCord(int x, int y, int z, vector<Vertex>::iterator &position) {
+	bool findVertexByCord(Vector3D vect, vector<Vertex>::iterator &position) {
 		for (vector<Vertex>::iterator it = m_vertexes.begin();
 			it < m_vertexes.end(); it++) {
-			if (((*it).x == x) && ((*it).y == y) && ((*it).z == z)) {
+			if ((*it).getCoordinate() == vect) {
 				position = it;
 				return true;
 			}
@@ -80,7 +97,7 @@ private:
 	bool findVertexByIndex(int index, vector<Vertex>::iterator &position) {
 		for (vector<Vertex>::iterator it = m_vertexes.begin();
 			it < m_vertexes.end(); it++) {
-			if ((*it).index == index) {
+			if ((*it).getIndex() == index) {
 				position = it;
 				return true;
 			}
@@ -89,9 +106,9 @@ private:
 	}
 public:
 	VertexSet() { m_nextVertexIndex = 0; }
-	bool delVertexByCord(int x, int y, int z) {
+	bool delVertexByCord(Vector3D vect) {
 		vector<Vertex>::iterator position;
-		if (findVertexByCord(x, y, z, position)) {
+		if (findVertexByCord(vect, position)) {
 			m_vertexes.erase(position);
 			return true;
 		}
@@ -107,9 +124,9 @@ public:
 	bool addVertex(Vertex v) {
 		vector<Vertex>::iterator position;
 		// if there is no vertex has the same coordinate, add the new vertex to m_vertexes
-		if (!findVertexByCord(v.x, v.y, v.z, position)) {
+		if (!findVertexByCord(v.getCoordinate(), position)) {
 			Vertex newVertex(v);
-			newVertex.index = m_nextVertexIndex;
+			newVertex.setIndex(m_nextVertexIndex);
 			m_vertexes.push_back(newVertex);
 			m_nextVertexIndex++;
 			return true;
