@@ -1,21 +1,24 @@
-#ifndef VERTEX_H
-#define VERTEX_H
+#ifndef VERTEX_HPP
+#define VERTEX_HPP
 
 #include<iostream>
 #include<vector>
+#include<utility> // std::pair
 #include"calc.hpp"
-using namespace std;
+
+// typedef pair<int, int> FaceNode;
 
 class Vertex {
 private:
 	Vector3D m_coordinate;
 	int index;
-	vector<int> m_neighbors;
+	std::vector<int> m_neighbors;
+	// vector<FaceNode> m_faceCombo; // every FaceNode element has two vertex index, these two vertexes and the vertex itself make up a face
 	bool m_isDeleted;  // if this vertex is deleted, set this to true
 public:
 	// constructor
 	Vertex() { m_coordinate.x = 0; m_coordinate.y = 0; m_coordinate.z = 0; index = -1; m_isDeleted = false; }
-	Vertex(float p_x, float p_y, float p_z, int p_index = -1) {
+	Vertex(double p_x, double p_y, double p_z, int p_index = -1) {
 		this->m_coordinate.x = p_x; 
 		this->m_coordinate.y = p_y; 
 		this->m_coordinate.z = p_z; 
@@ -37,7 +40,7 @@ public:
 	}
 	// add a neighbor of this vertex
 	void addNeighbor(int index) {
-		for (vector<int>::iterator it = m_neighbors.begin(); it < m_neighbors.end(); it++) {
+		for (std::vector<int>::iterator it = m_neighbors.begin(); it < m_neighbors.end(); it++) {
 			if (*it == index) {
 				return;
 			}
@@ -47,7 +50,7 @@ public:
 	}
 	// delete a neighbor of vertex 
 	void deleteNeighbor(int index) {
-		for (vector<int>::iterator it = m_neighbors.begin(); it < m_neighbors.end(); it++) {
+		for (std::vector<int>::iterator it = m_neighbors.begin(); it < m_neighbors.end(); it++) {
 			if (*it == index) {
 				m_neighbors.erase(it);
 				return;
@@ -58,7 +61,7 @@ public:
 	// add all the neighbors of another vertex to this vertex
 	void addNeighborFromVertex(Vertex v) {
 		clearNeighbors();
-		for (vector<int>::iterator it = v.m_neighbors.begin(); it < m_neighbors.end(); it++) {
+		for (std::vector<int>::iterator it = v.m_neighbors.begin(); it < m_neighbors.end(); it++) {
 			this->m_neighbors.push_back(*it);
 		}
 
@@ -70,9 +73,9 @@ public:
 	}
 
 	// visit private elements
-	float getX() { return this->m_coordinate.x; }
-	float getY() { return this->m_coordinate.y; }
-	float getZ() { return this->m_coordinate.z; }
+	double getX() { return this->m_coordinate.x; }
+	double getY() { return this->m_coordinate.y; }
+	double getZ() { return this->m_coordinate.z; }
 	Vector3D getCoordinate() { return this->m_coordinate; }
 	int getIndex() { return this->index; }
 
@@ -82,10 +85,10 @@ public:
 
 class VertexSet {
 private:
-	vector<Vertex> m_vertexes;
+	std::vector<Vertex> m_vertexes;
 	int m_nextVertexIndex;
-	bool findVertexByCord(Vector3D vect, vector<Vertex>::iterator &position) {
-		for (vector<Vertex>::iterator it = m_vertexes.begin();
+	bool findVertexByCord(Vector3D vect, std::vector<Vertex>::iterator &position) {
+		for (std::vector<Vertex>::iterator it = m_vertexes.begin();
 			it < m_vertexes.end(); it++) {
 			if ((*it).getCoordinate() == vect) {
 				position = it;
@@ -94,8 +97,8 @@ private:
 		}
 		return false;
 	}
-	bool findVertexByIndex(int index, vector<Vertex>::iterator &position) {
-		for (vector<Vertex>::iterator it = m_vertexes.begin();
+	bool findVertexByIndex(int index, std::vector<Vertex>::iterator &position) {
+		for (std::vector<Vertex>::iterator it = m_vertexes.begin();
 			it < m_vertexes.end(); it++) {
 			if ((*it).getIndex() == index) {
 				position = it;
@@ -107,7 +110,7 @@ private:
 public:
 	VertexSet() { m_nextVertexIndex = 0; }
 	bool delVertexByCord(Vector3D vect) {
-		vector<Vertex>::iterator position;
+		std::vector<Vertex>::iterator position;
 		if (findVertexByCord(vect, position)) {
 			m_vertexes.erase(position);
 			return true;
@@ -116,13 +119,13 @@ public:
 	}
 
 	void delVertexByIndex(int index) {
-		vector<Vertex>::iterator position;
+		std::vector<Vertex>::iterator position;
 		if (findVertexByIndex(index, position)) {
 			m_vertexes.erase(position);
 		}
 	}
 	bool addVertex(Vertex v) {
-		vector<Vertex>::iterator position;
+		std::vector<Vertex>::iterator position;
 		// if there is no vertex has the same coordinate, add the new vertex to m_vertexes
 		if (!findVertexByCord(v.getCoordinate(), position)) {
 			Vertex newVertex(v);
@@ -133,6 +136,16 @@ public:
 		}
 		else return false;
 	}
+	
+	bool getVertexCoorByIndex(int vertexIndex, Vector3D &coor) {
+		std::vector<Vertex>::iterator v;
+		if (findVertexByIndex(vertexIndex, v)) {
+			coor = (*v).getCoordinate();
+			return true;
+		}
+		else return false;
+	}
+
 };
 
 #endif // !VERTEX_H
