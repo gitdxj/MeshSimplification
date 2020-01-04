@@ -6,12 +6,11 @@
 class Edge {
 public:
 	int v1, v2; // v1 and v2 are indexes of vertex
-	int index;
 	Vector3D ECVertex; // vertex we get after edge collapse
-	bool m_isDeleted;
+	bool isDeleted;
 	double err;
-	Edge() { v1 = -1; v2 = -1; index = -1; }
-	Edge(int p_v1, int p_v2, int p_index = -1) { v1 = p_v1; v2 = p_v2; index = p_index; }
+	Edge() { v1 = -1; v2 = -1; }
+	Edge(int p_v1, int p_v2) { v1 = p_v1; v2 = p_v2;}
 	//double getError() { return this->m_error; }
 };
 
@@ -26,13 +25,22 @@ private:
 			return e2.err > e1.err;
 		}
 	};
-	std::priority_queue<Edge, std::vector<Edge>, cmp> pq; // In a priority queue, element with the highest priority will be placed on the root
+	std::priority_queue<Edge, std::vector<Edge>, cmp> m_priorityQueue; // In a priority queue, element with the highest priority will be placed on the root
 	int cntEdge;
 public:
 	EdgePriorityQueue() {}
-	void addEdge(Edge e){}
-	void deleteEdge(Edge e){}
-	Edge getMiniError(){}
+	void addEdge(Edge e) {
+		Edge newEdge(e);
+		this->m_priorityQueue.push(newEdge);
+	}
+	Edge getMiniError(){
+		if (this->m_priorityQueue.empty()) {
+			return Edge(-1, -1);
+		}
+		Edge targetEdge(this->m_priorityQueue.top());
+		this->m_priorityQueue.pop();
+		return targetEdge;
+	}
 };
 
 #endif // !EDGE_HPP

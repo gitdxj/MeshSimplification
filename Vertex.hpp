@@ -1,30 +1,40 @@
 #ifndef VERTEX_HPP
 #define VERTEX_HPP
-
+#define MAX_VERTEX 10000
 #include<iostream>
 #include<vector>
+#include<string>
 #include<utility> // std::pair
 #include"calc.hpp"
 
 // typedef pair<int, int> FaceNode;
+typedef std::pair<int, int> Old2New; // a mapping from old vertex index to new vertex index
+bool findInMapping(std::vector<Old2New> mapping, int v, Old2New &o2n) {
+	for (std::vector<Old2New>::iterator it = mapping.begin(); it < mapping.end(); it++) {
+		if (v == (*it).first) {
+			o2n = *it;
+			return true;
+		}
+	}
+	return false;
+}
 
 class Vertex {
-private:
+public:
 	Vector3D m_coordinate;
 	int index;
 	std::vector<int> m_neighbors;
 	// vector<FaceNode> m_faceCombo; // every FaceNode element has two vertex index, these two vertexes and the vertex itself make up a face
-	bool m_isDeleted;  // if this vertex is deleted, set this to true
-public:
+	bool isDeleted;  // if this vertex is deleted, set this to true
 	// constructor
-	Vertex() { m_coordinate.x = 0; m_coordinate.y = 0; m_coordinate.z = 0; index = -1; m_isDeleted = false; }
+	Vertex() { m_coordinate.x = 0; m_coordinate.y = 0; m_coordinate.z = 0; index = -1; isDeleted = false;  }
 	Vertex(double p_x, double p_y, double p_z, int p_index = -1) {
 		this->m_coordinate.x = p_x; 
 		this->m_coordinate.y = p_y; 
 		this->m_coordinate.z = p_z; 
-		this->index = p_index; m_isDeleted = false;
+		this->index = p_index; isDeleted = false;
 	}
-	Vertex(Vector3D p_coor, int p_index) {
+	Vertex(Vector3D p_coor, int p_index = -1) {
 		this->m_coordinate = p_coor;
 		this->index = p_index;
 	}
@@ -39,14 +49,14 @@ public:
 		}
 	}
 	// add a neighbor of this vertex
-	void addNeighbor(int index) {
-		for (std::vector<int>::iterator it = m_neighbors.begin(); it < m_neighbors.end(); it++) {
-			if (*it == index) {
-				return;
-			}
-			m_neighbors.push_back(index);
+	void addNeighbor(int v) {
+		bool existsV = false;
+		for (std::vector<int>::iterator id = m_neighbors.begin(); id < m_neighbors.end(); id++) {
+			if (*id == v)
+				existsV = true;
 		}
-
+		if(!existsV)
+			m_neighbors.push_back(v);
 	}
 	// delete a neighbor of vertex 
 	void deleteNeighbor(int index) {
@@ -72,80 +82,140 @@ public:
 		m_neighbors.clear();
 	}
 
-	// visit private elements
-	double getX() { return this->m_coordinate.x; }
-	double getY() { return this->m_coordinate.y; }
-	double getZ() { return this->m_coordinate.z; }
-	Vector3D getCoordinate() { return this->m_coordinate; }
-	int getIndex() { return this->index; }
+	//// visit private elements
+	//double getX() { return this->m_coordinate.x; }
+	//double getY() { return this->m_coordinate.y; }
+	//double getZ() { return this->m_coordinate.z; }
+	//Vector3D getCoordinate() { return this->m_coordinate; }
+	//int getIndex() { return this->index; }
 
-	// set private elements
-	void setIndex(int index) { this->index = index; }
+	//// set private elements
+	//void setIndex(int index) { this->index = index; }
 };
 
 class VertexSet {
 private:
-	std::vector<Vertex> m_vertexes;
+	Vertex m_vertexes[MAX_VERTEX];
+	std::vector<int> m_indexes;
+	bool isDefault[MAX_VERTEX];
 	int m_nextVertexIndex;
-	bool findVertexByCord(Vector3D vect, std::vector<Vertex>::iterator &position) {
-		for (std::vector<Vertex>::iterator it = m_vertexes.begin();
-			it < m_vertexes.end(); it++) {
-			if ((*it).getCoordinate() == vect) {
-				position = it;
-				return true;
-			}
+	int m_vertexNum;
+
+	bool getVertex(int index, Vertex &v) {
+		if (!isDefault[index]) {
+			v = m_vertexes[index];
+			return true;
 		}
-		return false;
-	}
-	bool findVertexByIndex(int index, std::vector<Vertex>::iterator &position) {
-		for (std::vector<Vertex>::iterator it = m_vertexes.begin();
-			it < m_vertexes.end(); it++) {
-			if ((*it).getIndex() == index) {
-				position = it;
-				return true;
-			}
-		}
-		return false;
+		else return false;
 	}
 public:
-	VertexSet() { m_nextVertexIndex = 0; }
-	bool delVertexByCord(Vector3D vect) {
-		std::vector<Vertex>::iterator position;
-		if (findVertexByCord(vect, position)) {
-			m_vertexes.erase(position);
-			return true;
-		}
-		else return false;
-	}
+	VertexSet() { m_nextVertexIndex = 0; m_vertexNum = 0; 
+	for (int i = 0; i < MAX_VERTEX; i++) isDefault[i] = true;}
+
+	int getVertexNum() { return this->m_vertexNum; }
 
 	void delVertexByIndex(int index) {
-		std::vector<Vertex>::iterator position;
-		if (findVertexByIndex(index, position)) {
-			m_vertexes.erase(position);
-		}
+		//std::vector<Vertex>::iterator position;
+		//if (findVertexByIndex(index, position)) {
+		//	m_vertexes.erase(position);
+		//}
+		this->m_vertexes[index].isDeleted = true;
+		this->m_vertexNum--;
 	}
-	bool addVertex(Vertex v) {
-		std::vector<Vertex>::iterator position;
-		// if there is no vertex has the same coordinate, add the new vertex to m_vertexes
-		if (!findVertexByCord(v.getCoordinate(), position)) {
-			Vertex newVertex(v);
-			newVertex.setIndex(m_nextVertexIndex);
-			m_vertexes.push_back(newVertex);
-			m_nextVertexIndex++;
-			return true;
+	bool isDeleted(int index) {
+		return this->m_vertexes[index].isDeleted;
+	}
+
+	int addVertex(Vertex v) {
+		isDefault[m_nextVertexIndex] = false;
+		this->m_vertexes[m_nextVertexIndex] = v;
+		this->m_indexes.push_back(m_nextVertexIndex);
+		m_nextVertexIndex++;
+		this->m_vertexNum++;  // number of vertexes
+		return m_nextVertexIndex - 1;
+	}
+
+	int addVertex(double x, double y, double z) {
+		Vertex newVertex(x, y, z);
+		return addVertex(newVertex);
+	}
+
+	int addVertex(Vector3D vect) {
+		return addVertex(vect.x, vect.y, vect.z);
+	}
+
+	void addNeighor(int v, int neighborIndex) {
+		if (!isDefault[v]) {
+			this->m_vertexes[v].addNeighbor(neighborIndex);
 		}
-		else return false;
 	}
 	
-	bool getVertexCoorByIndex(int vertexIndex, Vector3D &coor) {
-		std::vector<Vertex>::iterator v;
-		if (findVertexByIndex(vertexIndex, v)) {
-			coor = (*v).getCoordinate();
+	void addNeighborFromTo(int v1, int v2, int ECv) { // add the neighbors of v1 and v2 to ECv
+		std::vector<int> neighbor1 = m_vertexes[v1].m_neighbors;
+		std::vector<int> neighbor2 = m_vertexes[v2].m_neighbors;
+		for (std::vector<int>::iterator it = neighbor1.begin(); it < neighbor1.end(); it++) {
+			if (*it != v2) { // add all v1's neighbors except v2
+				m_vertexes[ECv].addNeighbor(*it);
+			}
+		}
+		for (std::vector<int>::iterator it = neighbor2.begin(); it < neighbor2.end(); it++) {
+			if (*it != v1) { // add all v2's neighbors except v1
+				m_vertexes[ECv].addNeighbor(*it);
+			}
+		}
+	}
+
+	std::vector<int> getNeighborsByIndex(int v) {
+		return m_vertexes[v].m_neighbors;
+	}
+
+	bool getVertexCoorByIndex(int v, Vector3D &coor) {
+		if (!isDefault[v]) {
+			coor = m_vertexes[v].m_coordinate;
 			return true;
 		}
 		else return false;
 	}
 
+	// get all vertexes by examinating the neighbors of every vertex
+	std::vector<std::pair<int, int>> getAllVertexes() {
+		std::vector<std::pair<int, int>> allVertexes;
+		for (std::vector<int>::iterator id = this->m_indexes.begin(); id < this->m_indexes.end(); id++) {
+			if (!this->m_vertexes[*id].isDeleted) {
+				std::vector<int> neighbors = this->m_vertexes[*id].m_neighbors;
+				for (std::vector<int>::iterator it = neighbors.begin(); it < neighbors.end(); it++) {
+					if (*id > *it) {
+						continue;
+					}
+					allVertexes.push_back(std::pair<int, int>(*id, *it));
+				}
+			}
+		}
+		return allVertexes;
+	}
+
+	std::vector<Old2New> getOld2NewMapping() {
+		std::vector<Old2New> oldNewMapping;
+		int nextIndex = 0;
+		for (std::vector<int>::iterator id = this->m_indexes.begin(); id < this->m_indexes.end(); id++) {
+			if (!m_vertexes[*id].isDeleted) {
+				oldNewMapping.push_back(Old2New(*id, nextIndex));
+				nextIndex++;
+			}
+		}
+		return oldNewMapping;
+	}
+
+	std::string outContent() {
+		std::string content;
+		for (std::vector<int>::iterator id = this->m_indexes.begin(); id < this->m_indexes.end(); id++) {
+			if (!m_vertexes[*id].isDeleted) {
+				content += "v " + std::to_string((m_vertexes[*id]).m_coordinate.x) + " " + std::to_string((m_vertexes[*id]).m_coordinate.y)
+					+ " " +std::to_string((m_vertexes[*id]).m_coordinate.z) + "\n";
+			}
+		}
+		return content;
+	}
 };
 
 #endif // !VERTEX_H

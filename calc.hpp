@@ -98,12 +98,12 @@ public:
 	}
 
 	SquareMatrix4D operator+(const SquareMatrix4D &m) {
-		SquareMatrix4D result;
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 4; j++) {
 				m_data[i][j] = m_data[i][j] + m.m_data[i][j];
 			}
 		}
+		return *this;
 	}
 	
 };
