@@ -1,119 +1,123 @@
 #ifndef CALC_HPP
 #define CALC_HPP
-#include<cmath>
-#include<algorithm>
-// 3 dimentional vector
-struct Vector3D {
-	double x, y, z;
-	Vector3D() {}
-	Vector3D(double p_x, double p_y, double p_z) {
-		x = p_x; y = p_y; z = p_z;
-	}
-	bool operator==(const Vector3D &v) {
-		return ((x == v.x) && (y == v.y) && (z == v.z));
-	}
-	double& operator[](int i) {
-		switch (i) {
-		case 0: return x;
-		case 1: return y;
-		case 2: return z;
-		default: throw "IndexOutOfRange";
+
+#include <cmath>
+#include <iostream>
+#include <iomanip>  // 用来格式化输出
+
+using std::cout;
+using std::endl;
+
+namespace Dongxj {
+
+	class Vector3D
+	{
+
+	public:
+		double x, y, z;
+
+		Vector3D() {}
+		Vector3D(double p_x, double p_y, double p_z) {
+			x = p_x; y = p_y; z = p_z;
 		}
-	}
-	Vector3D operator-(const Vector3D &vect) {
-		return Vector3D(x - vect.x, y - vect.y, z - vect.z);
-	}
 
-	Vector3D operator+(const Vector3D &vect) {
-		return Vector3D(x + vect.x, y + vect.y, z + vect.z);
-	}
-
-	Vector3D operator/(double denomi) {
-		return Vector3D(x / denomi, y / denomi, z / denomi);
-	}
-
-	// dot product
-	double operator*(const Vector3D &vect) {
-		return x * vect.x + y * vect.y + z * vect.z;
-	}
-
-	Vector3D getUnitVector() {
-		double squredLen = x*x + y*y + z*z;
-		double denominator = sqrt(squredLen);
-		return Vector3D(x / denominator, y / denominator, z / denominator);
-	}
-};
-
-// the cross product of two vectors are vertical to these two vectors
-Vector3D crossProduct(Vector3D a, Vector3D b) {
-	return Vector3D(b.y*a.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
-}
-
-double dotProduct(Vector3D a, Vector3D b) {
-	return a.x*b.x + a.y*b.y + a.z*b.z;
-}
-
-Vector3D getUnitVector(Vector3D vect) {
-	double squredLen = dotProduct(vect, vect);
-	double denominator = sqrt(squredLen);
-	return Vector3D(vect.x / denominator, vect.y / denominator, vect.z / denominator);
-}
-
-
-// for homogeneous vector
-struct Vector4D {
-	double x, y, z, w;
-	Vector4D() { x = y = z = w = 0; }
-	// Initialize a homogeneous vector using a 3 dimentianal vector
-	Vector4D(Vector3D vect) {
-		this->x = vect.x;
-		this->y = vect.y;
-		this->z = vect.z;
-		this->w = 1;
-	}
-	double& operator[](int i) {
-		switch (i) {
-		case 0: return x;
-		case 1: return y;
-		case 2: return z;
-		case 3: return w;
-		default: throw "IndexOutOfRange";
+		bool operator==(const Vector3D &v) {
+			return ((x == v.x) && (y == v.y) && (z == v.z));
 		}
-	}
-};
 
-class SquareMatrix4D {
-public:
-	double m_data[4][4];
-	SquareMatrix4D() {
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				m_data[i][j] = 0;
+		double& operator[](int i) {
+			switch (i) {
+			case 0: return x;
+			case 1: return y;
+			case 2: return z;
+			default: throw "IndexOutOfRange";
 			}
 		}
-	}
-	// enable accessing the element by var_name[i][j]
-	double* operator[](int i) {
-		return this->m_data[i];
+
+		Vector3D operator + (const Vector3D &V) {
+			return Vector3D(x + V.x, y + V.y, z + V.z);
+		}
+		Vector3D operator - (const Vector3D &V) {
+			return Vector3D(x - V.x, y - V.y, z - V.z);
+		}
+		Vector3D operator / (double t) {
+			return Vector3D(x / t, y / t, z / t);
+		}
+
+		Vector3D getUnitVectorOfThis() {
+			double len = sqrt(x * x + y * y + z * z);
+			return *this / len;
+		}
+
+	};
+
+	Vector3D crossProduct(Vector3D a, Vector3D b) {
+		return Vector3D(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
 	}
 
-	SquareMatrix4D operator+(const SquareMatrix4D &m) {
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				m_data[i][j] = m_data[i][j] + m.m_data[i][j];
+	double dotProduct(Vector3D a, Vector3D b) {
+		return a.x*b.x + a.y*b.y + a.z*b.z;
+	}
+
+	class Vector4D
+	{
+	public:
+		double data[4];
+		Vector4D(double X = 0, double Y = 0, double Z = 0, double W = -99) {
+			data[0] = X; data[1] = Y; data[2] = Z; data[3] = W;
+		}
+		double& operator[](int i) {
+			return data[i];
+		}
+		Vector4D operator + (const Vector4D& V) {
+			return Vector4D(data[0] + V.data[0], data[1] + V.data[1], data[2] + V.data[2], data[3] + V.data[3]);
+		}
+	};
+
+
+	class SquareMatrix4D
+	{
+	public:
+		double data[4][4];
+
+		double* operator[](int i) {
+
+			return data[i];
+		}
+
+		SquareMatrix4D() {
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					data[i][j] = 0;
+				}
 			}
 		}
-		return *this;
-	}
-	
-};
+
+		SquareMatrix4D operator +(const SquareMatrix4D &M) {
+			SquareMatrix4D m;
+			for (int i = 0; i < 4; i++)
+				for (int j = 0; j < 4; j++)
+					m.data[i][j] = data[i][j] + M.data[i][j];
+			return m;
+		}
 
 
-// solve linear equation set
-Vector4D solveEquation(SquareMatrix4D m, Vector4D v) {
-	Vector4D result;
-	return result;
+		void show() {
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++) {
+					cout << std::fixed/*以小数形式输出（不用科学计数法）*/
+						<< std::setprecision(1)/*保留小数点后一位*/
+						<< std::setw(6)/*指定输出宽度为6，不足用空格补齐*/
+						<< std::right/*向右对齐*/ << data[i][j];
+				}
+				cout << endl;
+			}
+			cout << endl;
+		}
+	};
+
 }
+#endif
 
 
-#endif // !CALC_HPP

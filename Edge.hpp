@@ -1,46 +1,75 @@
 #ifndef EDGE_HPP
 #define EDGE_HPP
-#include <queue>
 #include "calc.hpp"
+#include <queue>
+#include <map>
 
-class Edge {
-public:
-	int v1, v2; // v1 and v2 are indexes of vertex
-	Vector3D ECVertex; // vertex we get after edge collapse
-	bool isDeleted;
-	double err;
-	Edge() { v1 = -1; v2 = -1; }
-	Edge(int p_v1, int p_v2) { v1 = p_v1; v2 = p_v2;}
-	//double getError() { return this->m_error; }
-};
+using std::map;
+using std::pair;
 
+namespace Dongxj {
 
+	class Edge
+	{
+	public:
+		int id;
+		int v1, v2;
+		Vector3D v;
+		double error;
+		Edge(int v1 = -1, int v2 = -1) {
+			id = -1;
+			this->v1 = v1;
+			this->v2 = v2;
+			error = 10000;
+		}
 
-class EdgePriorityQueue
-{
-private:
-	// specify the standard of priority in priority queue
-	struct cmp {
-		bool operator() (Edge e1, Edge e2) {
-			return e2.err > e1.err;
+	};
+
+	class EdgePriorityQueue
+	{
+	public:
+		EdgePriorityQueue(void) {
+			cntEdge = 0;
+			for (int i = 0; i < 1000000; i++)
+				isDeleted[i] = false;
+		}
+		// specify the definition of priority in priotiry queue
+		struct cmp {
+			bool operator() (Edge e1, Edge e2) {
+				return e1.error > e2.error;
+			}
+		};
+		std::priority_queue<Edge, std::vector<Edge>, cmp> pq;
+		map<pair<int, int>, int> mapEdgeToID;
+		bool isDeleted[1000000];
+		int cntEdge;
+		void addEdge(Edge& e) {
+			cntEdge++;
+			e.id = cntEdge;
+			int u = std::min(e.v1, e.v2);
+			int v = std::max(e.v1, e.v2);
+			mapEdgeToID[std::make_pair(u, v)] = cntEdge;
+			pq.push(e);
+		}
+		void delEdge(Edge e) {
+			int u = std::min(e.v1, e.v2);
+			int v = std::max(e.v1, e.v2);
+			int ID = mapEdgeToID[std::make_pair(u, v)];
+			isDeleted[ID] = true;
+		};
+		Edge getMinErr() {
+			if (pq.size() <= 0) {
+				return Edge(0, 0);
+			}
+			while (isDeleted[pq.top().id]) {
+				pq.pop();
+			}
+			Edge e = pq.top();
+			pq.pop();
+			return e;
 		}
 	};
-	std::priority_queue<Edge, std::vector<Edge>, cmp> m_priorityQueue; // In a priority queue, element with the highest priority will be placed on the root
-	int cntEdge;
-public:
-	EdgePriorityQueue() {}
-	void addEdge(Edge e) {
-		Edge newEdge(e);
-		this->m_priorityQueue.push(newEdge);
-	}
-	Edge getMiniError(){
-		if (this->m_priorityQueue.empty()) {
-			return Edge(-1, -1);
-		}
-		Edge targetEdge(this->m_priorityQueue.top());
-		this->m_priorityQueue.pop();
-		return targetEdge;
-	}
-};
+}
 
-#endif // !EDGE_HPP
+
+#endif
